@@ -258,15 +258,21 @@ if execute:
     else:
         with st.spinner("Drafting memo..."):
             prompt = f"""
-            Write a highly concise corporate email regarding '{subj_val}'.
-            STYLE: Extremely dry, bureaucratic, and jargon-heavy (think Office Space). 
-            LENGTH LIMIT: STRICTLY TWO SHORT PARAGRAPHS. Absolute maximum of 6 sentences total for the body. Corporate memos are brutally brief, dense, and to the point. Cut all fluff and pleasantries.
+            You are a classic fill-in-the-blank Mad Libs game. 
             
-            THE VARIABLES TO INTEGRATE INTO THE BODY:
-            - Primary Stakeholder/Recipient: {to_val}
-            - Other details: {json.dumps(collected_main)}
+            INSTRUCTIONS:
+            1. Write a completely standard, boring, easy-to-read 4-5 sentence corporate email about '{subj_val}'. 
+            2. Take this list of random words: {json.dumps(collected_main)}
+            3. Blindly replace key nouns, verbs, and adjectives in your normal email with these random words.
             
-            - Bold all these provided variables exactly like this: **word**. Do not bold other words.
+            THE MAD LIBS RULE:
+            - DO NOT try to make the sentence make logical sense. 
+            - DO NOT change the random words to fit the grammar. 
+            - The humor comes from a completely normal corporate sentence suddenly having a ridiculous word jammed into it, exactly like a childhood paper Mad Libs book.
+            
+            FORMATTING: 
+            Start the email with: **{to_val}**,
+            Bold ONLY the provided random words exactly like this: **word**. Do not bold anything else.
             
             SIGN-OFF:
             Conclude the email by placing this exact phrase on its own line at the very end (bold it): **{sign_off_val}**
