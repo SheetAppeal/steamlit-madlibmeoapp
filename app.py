@@ -312,7 +312,7 @@ if execute:
             prompt = f"""
             You are creating a template for a classic Mad Libs game. 
             
-            Write a completely standard, serious, boring 4-5 sentence corporate email about '{subj_val}'.
+            Write a completely standard, serious, boring 4-5 sentence, 2 paragraph, corporate email about.  '{subj_val}'.
             
             CRITICAL RULE: 
             Instead of writing a normal email, you MUST leave bracketed placeholders in the text where words will be injected later. 
