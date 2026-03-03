@@ -306,38 +306,54 @@ if execute:
         st.error("Missing Data: Please fill out all fields before generating the memo.")
     else:
         with st.spinner("Drafting memo..."):
+            
+            # 1. BLINDFOLD THE AI: Tell it to write a template with blank spaces
             prompt = f"""
-            You are a classic fill-in-the-blank Mad Libs game. 
+            You are creating a template for a classic Mad Libs game. 
             
-            INSTRUCTIONS:
-            1. Write a completely standard, boring, easy-to-read 4-5 sentence corporate email about '{subj_val}'. 
-            2. Take this list of random words: {json.dumps(collected_main)}
-            3. Blindly replace key nouns, verbs, and adjectives in your normal email with these random words.
+            Write a completely standard, serious, boring 4-5 sentence corporate email about '{subj_val}'.
             
-            THE MAD LIBS RULE:
-            - DO NOT try to make the sentence make logical sense. 
-            - DO NOT change the random words to fit the grammar. 
-            - The humor comes from a completely normal corporate sentence suddenly having a ridiculous word jammed into it, exactly like a childhood paper Mad Libs book.
-            - Keep the inserted words strictly lowercase unless they are at the very beginning of a sentence.
-
-            FORMATTING: 
-            Start the email with: **{to_val}**,
-            Bold ONLY the provided random words exactly like this: **word**. Do not bold anything else.
+            CRITICAL RULE: 
+            Instead of writing a normal email, you MUST leave bracketed placeholders in the text where words will be injected later. 
+            You must include EVERY SINGLE ONE of these exact placeholders organically in the text:
+            [Noun]
+            [Adjective]
+            [Verb]
+            [Place]
+            [Corporate Jargon]
+            [Absurd Office Supply]
+            [Vague Metric]
             
-            SIGN-OFF:
-            Conclude the email by placing this exact phrase on its own line at the very end (bold it): **{sign_off_val}**
+            Do not fill in the blanks. Just use the exact brackets above. The sentences around the brackets must be completely normal and boring. Do not add a greeting or a sign-off.
             """
             try:
-                response = client.models.generate_content(model='gemma-3-27b-it', contents=prompt)
-                st.session_state.email_data = response.text
+                # Turn the temperature DOWN so the AI writes a highly predictable, boring template
+                response = client.models.generate_content(
+                    model='gemma-3-27b-it', 
+                    contents=prompt,
+                    config=types.GenerateContentConfig(temperature=0.3)
+                )
+                
+                draft_text = response.text
+                
+                # 2. PYTHON INJECTS THE WORDS (The true Mad Libs way)
+                for label in word_keys:
+                    if label != "Passive-Aggressive Sign-off":
+                        user_word = st.session_state.get(f"field_{label}", "").strip().lower()
+                        # This finds the AI's [Placeholder] and shoves your bold word into it
+                        draft_text = re.sub(rf'\[(?i){label}\]', f"**{user_word}**", draft_text)
+                
+                # 3. Add the To and Sign-off manually
+                final_email = f"**{to_val}**,\n\n{draft_text}\n\n**{sign_off_val}**"
+                
+                st.session_state.email_data = final_email
             except Exception as e:
                 st.error(f"Network Error: {e}")
 
 if st.session_state.email_data:
-    # Bolding rule (no blue color)
+    # Remove the blue color styling from the bolded words
     body_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', st.session_state.email_data)
     
-    # Clean HTML template (no more manual <br> tags needed!)
     report_html = f"""
     <div class="output-card">
         <div class="output-header"><strong>To:</strong> {to_val}</div>
