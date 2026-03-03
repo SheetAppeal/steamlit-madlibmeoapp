@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # --- 1. CONFIG & API ---
 API_KEY = st.secrets["GEMINI_API_KEY"]
-client = genai.Client(api_key=API_KEY)
+genai.configure(api_key=API_KEY)
 
 st.set_page_config(page_title="Memo Generator | Sheet Appeal", page_icon="📝", layout="centered")
 
