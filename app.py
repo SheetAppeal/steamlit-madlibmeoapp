@@ -342,7 +342,7 @@ if execute:
                     if label != "Passive-Aggressive Sign-off":
                         user_word = st.session_state.get(f"field_{label}", "").strip().lower()
                         # This finds the AI's [Placeholder] and shoves your bold word into it
-                        draft_text = re.sub(rf'\[(?i){label}\]', f"**{user_word}**", draft_text)
+                        draft_text = re.sub(rf'\[{label}\]', f"**{user_word}**", draft_text, flags=re.IGNORECASE)
                 
                 # 3. Add the To and Sign-off manually
                 final_email = f"**{to_val}**,\n\n{draft_text}\n\n**{sign_off_val}**"
