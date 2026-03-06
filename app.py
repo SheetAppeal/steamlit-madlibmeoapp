@@ -9,7 +9,7 @@ import time
 
 # --- 1. CONFIG & API ---
 # Set up the Gemini Client
-API_KEY = st.secrets["GEMINI_API_KEY"]
+API_KEY = st.secrets["GEMINI_API_KEY"] # <-- Paste your API key here
 client = genai.Client(api_key=API_KEY)
 
 st.set_page_config(page_title="Linguistic Processor | Sheet Appeal", page_icon="🗂️", layout="centered")
@@ -215,11 +215,13 @@ FUNNY_SUBJECTS = [
     "Urgent: Gary's stapler has breached containment"
 ]
 
+# Note: Labels shortened to prevent UI wrapping, 6th variable added.
 FUNNY_WORDS = {
-    "Aggressively passive-aggressive adjective": ["Perfunctory", "Adequate", "Underwhelming", "Moist", "Noted"],
-    "Forgotten 90s pop culture toy": ["Tamagotchi", "Bop It", "Furby", "Skip-It", "Pogs"],
-    "Breakroom-bannable verb (-ing)": ["Breakdancing", "Jousting", "Fermenting", "Vaporizing", "Summoning"],
+    "Passive-aggressive adjective": ["Perfunctory", "Adequate", "Underwhelming", "Moist", "Noted"],
+    "Forgotten 90s toy": ["Tamagotchi", "Bop It", "Furby", "Skip-It", "Pogs"],
+    "Bannable breakroom verb (-ing)": ["Breakdancing", "Jousting", "Fermenting", "Vaporizing", "Summoning"],
     "Unsettling office snack (plural)": ["Lukewarm Fish Tacos", "Unlabeled Tupperware Meats", "Crusty Mayo Packets", "Fossilized Donuts", "Moistened Croutons"],
+    "Questionable fashion choice": ["Toe Shoes", "Wizard Robe", "Heelys", "Chain Wallet", "Assless Chaps"],
     "Sign-off phrase": ["Govern yourself accordingly,", "Stay radical,", "Sent from my smart fridge,", "Get recked,", "Ta ta for now,"]
 }
 
@@ -297,31 +299,28 @@ if execute:
     else:
         with st.spinner("Drafting memo..."):
             
-            # 2. The V3 Prompt (Adapted for API injection)
+            # 2. The Refined Prompt
             prompt = f"""
             Role and Persona:
-            Act as the "Mad Lib Memo Tester." You are a 1990s-era analog activity book system navigating a 21st-century office environment. 
-            Your function is to transform user-provided variables into a concise, absurdly funny corporate memo.
-
-            Workflow:
-            Use the provided 'Subject' and 'To' fields, along with the list of user variables, to write ONE single corporate email. 
-            Do not include a behind-the-scenes blueprint, just the final deliverable. Do not add any conversational filler.
+            Act as the "Mad Lib Memo Tester." You are a tired, slightly unhinged human middle manager forced to use a 21st-century computer.
+            Your function is to transform user-provided variables into ONE concise, absurdly funny corporate memo.
 
             Content & Style Rules:
-            * The Clash: The humor comes from the grammatical perfection of the sentences contrasting with the absolute absurdity of the injected words. Use heavy, outdated white-collar jargon (bandwidth, circle back, synergies, pivot, action items). 
+            * Tone: Sound like a real, frustrated human office worker, NOT a robotic AI. Use natural, conversational phrasing mixed with ridiculous corporate jargon (like bandwidth, circle back, optics, alignment). 
+            * BANNED WORDS: You are strictly forbidden from using the word "synergy" or "synergize".
+            * NO HEADERS: Do NOT include "Subject:", "To:", or formal greetings (like "Dear Team") inside your generated text. Start directly with the first sentence of the email body.
+            * The Clash: The sentences must be grammatically flawless, making the injected absurd words sound funny and jarring in context.
             * Formatting: You MUST bold the injected user variables exactly like this: **Variable**. Do not bold any other words.
-            * Length Constraint: The email body must be strictly brief: exactly one paragraph, maximum 3 to 4 sentences total. Include corporate pleasantries.
+            * Length Constraint: Keep it strictly brief: exactly one paragraph, maximum 3 to 4 sentences total. Include realistic corporate pleasantries.
             * Sign-off: Conclude the email by placing the user's exact sign-off phrase on its own line at the very end, bolded. Do NOT include any AI signatures.
 
             Input Data:
-            To: {to_val}
-            Subject: {subj_val}
-            Variables:
+            Context: The email is addressed to {to_val} regarding '{subj_val}'.
+            Variables to weave in:
             {user_variables}
             """
             
             try:
-                # Temperature raised slightly to 0.7 so the AI gets more creative with the jargon
                 response = client.models.generate_content(
                     model='gemma-3-27b-it', 
                     contents=prompt,
