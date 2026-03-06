@@ -4,127 +4,201 @@ from google.genai import types
 import json
 import random
 import datetime
-import textwrap
-import io
 import re
-from PIL import Image, ImageDraw, ImageFont
+import time
 
 # --- 1. CONFIG & API ---
+# Set up the Gemini Client
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
-st.set_page_config(page_title="Memo Generator | Sheet Appeal", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Linguistic Processor | Sheet Appeal", page_icon="🗂️", layout="centered")
 
 if 'email_data' not in st.session_state:
     st.session_state.email_data = None
-if 'draft_img' not in st.session_state:
-    st.session_state.draft_img = None
 
-# --- 2. MODERN SAAS CSS ---
+# --- 2. SHEET APPEAL IDENTITY CSS ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&family=Jost:wght@400;500&display=swap');
 
-    /* Clean, modern app background */
+    :root {
+        --archival-paper: #FDFBF7;
+        --faded-ledger: #D3D8D3;
+        --vintage-cell-green: #2E8555;
+        --lobby-boy-pink: #E29587;
+        --courtesan-mustard: #E4B363;
+    }
+
+    /* Base Typography and Canvas */
     .stApp { 
-        background-color: #f8fafc; 
-        color: #0f172a; 
-        font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        background-color: var(--archival-paper); 
+        color: var(--vintage-cell-green); 
+        font-family: 'Courier Prime', monospace !important; 
     }
 
-    /* Typography overrides */
-    h1, h2, h3, p, label, [data-testid="stWidgetLabel"] p {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        color: #0f172a !important;
+    h1, h2, h3 {
+        font-family: 'Jost', sans-serif !important;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-weight: 500 !important;
+        color: var(--vintage-cell-green) !important;
     }
 
-    /* Style the main container to look compact and centered */
+    p, label, [data-testid="stWidgetLabel"] p, span, div {
+        font-family: 'Courier Prime', monospace !important;
+        color: var(--vintage-cell-green) !important;
+    }
+
+    /* The Master Container */
     .main .block-container { 
         max-width: 850px; 
         padding-top: 3rem; 
         padding-bottom: 3rem;
     }
 
-    /* Custom Input Fields: Floating, clean, soft borders */
-    [data-testid="stTextInput"] input {
-        background-color: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 14px 16px !important;
-        font-size: 0.95rem;
-        color: #334155 !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
-        transition: all 0.2s ease;
+    /* Logo Styling */
+    .sa-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 70px;
+        border: 3px solid var(--vintage-cell-green);
+        background-color: var(--archival-paper);
+        color: var(--vintage-cell-green);
+        font-family: 'Jost', sans-serif !important;
+        font-size: 2.5rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        margin: 0 auto 20px auto;
+        box-shadow: 6px 6px 0px var(--lobby-boy-pink);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
     }
-    [data-testid="stTextInput"] input:focus {
-        border-color: #0ea5e9 !important; /* Sheet Appeal accent color */
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+    .sa-logo:hover {
+        transform: translate(2px, 2px);
+        box-shadow: 4px 4px 0px var(--courtesan-mustard);
+    }
+
+    .header-section h1 {
+        font-size: 1.4rem !important; 
+        letter-spacing: 0.4em !important; 
+        margin: 10px 0 15px 0 !important;
+        opacity: 0.9;
+        text-align: center;
+    }
+    .mission-statement {
+        text-align: center;
+        font-size: 1rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 40px;
+    }
+
+    /* Custom Input Fields: Force rigid corners on all nested layers */
+    div[data-testid="stTextInput"] * {
+        border-radius: 0px !important;
     }
     
+    div[data-baseweb="input"] {
+        background-color: var(--archival-paper) !important;
+        border: 2px solid var(--vintage-cell-green) !important;
+        transition: all 0.2s ease;
+    }
+    
+    div[data-baseweb="input"]:focus-within {
+        border-color: var(--lobby-boy-pink) !important;
+        box-shadow: 4px 4px 0px var(--courtesan-mustard) !important;
+    }
+    
+    div[data-baseweb="input"] input {
+        background-color: transparent !important;
+        color: var(--vintage-cell-green) !important;
+        font-family: 'Courier Prime', monospace !important;
+        padding: 12px 16px !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
     /* Section Labels */
     .section-label {
-        font-size: 0.85rem;
-        font-weight: 700;
+        font-family: 'Jost', sans-serif !important;
+        font-size: 1rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #64748b;
+        letter-spacing: 0.15em;
+        border-bottom: 2px solid var(--faded-ledger);
+        padding-bottom: 5px;
         margin-bottom: 15px;
         margin-top: 10px;
     }
 
-    /* Standard Buttons (Secondary) */
-    [data-testid="baseButton-secondary"] {
-        background-color: #ffffff;
-        color: #334155;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        font-weight: 600;
-        height: 2.8em;
+    /* The Buttons */
+    .stButton > button {
+        width: 100%;
+        border-radius: 0px !important;
+        border: 2px solid var(--vintage-cell-green) !important;
+        height: 3.2rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 15px !important;
         transition: all 0.2s ease;
-    }
-    [data-testid="baseButton-secondary"]:hover { 
-        background-color: #f1f5f9; 
-        border-color: #94a3b8;
-        color: #0f172a;
     }
     
-    /* Primary Execute Button */
+    /* Stop text wrapping and force font settings */
+    .stButton > button p {
+        font-family: 'Jost', sans-serif !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+        font-size: 0.85rem !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    /* Secondary Buttons (Auto-Fill, Clear) */
+    [data-testid="baseButton-secondary"] {
+        background-color: var(--vintage-cell-green) !important;
+    }
+    [data-testid="baseButton-secondary"] p {
+        color: var(--archival-paper) !important;
+    }
+    [data-testid="baseButton-secondary"]:hover {
+        background-color: var(--archival-paper) !important;
+    }
+    [data-testid="baseButton-secondary"]:hover p {
+        color: var(--vintage-cell-green) !important;
+    }
+
+    /* Primary Button (Generate Memo) */
     [data-testid="baseButton-primary"] {
-        background-color: #0ea5e9;
-        background-image: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-        color: #ffffff;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        height: 2.8em;
-        box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2), 0 2px 4px -1px rgba(14, 165, 233, 0.1);
-        transition: all 0.2s ease;
+        background-color: var(--archival-paper) !important;
+    }
+    [data-testid="baseButton-primary"] p {
+        color: var(--vintage-cell-green) !important;
     }
     [data-testid="baseButton-primary"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 8px -1px rgba(14, 165, 233, 0.3), 0 4px 6px -1px rgba(14, 165, 233, 0.2);
-        color: #ffffff;
+        background-color: var(--vintage-cell-green) !important;
     }
-    
-    /* Output Box */
+    [data-testid="baseButton-primary"]:hover p {
+        color: var(--archival-paper) !important;
+    }
+
+    /* Output Box / The generated memo */
     .output-card {
-        background-color: #ffffff;
-        padding: 35px;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        line-height: 1.7;
+        background-color: var(--archival-paper);
+        padding: 40px;
+        border: 2px solid var(--vintage-cell-green);
         margin-top: 30px;
+        line-height: 1.6;
         font-size: 1.05rem;
-        color: #1e293b;
-        word-wrap: break-word; /* Forces text to stay inside the box */
-        white-space: pre-wrap; /* Honors paragraph spacing natively */
     }
     
     .output-header {
-        color: #64748b;
-        font-size: 0.9rem;
+        font-family: 'Jost', sans-serif !important;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
         margin-bottom: 8px;
+        font-weight: 500;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -142,112 +216,24 @@ FUNNY_SUBJECTS = [
 ]
 
 FUNNY_WORDS = {
-    "Noun": ["Rotisserie Chicken", "Pivot Table", "Ham Sandwich", "Subpoena"],
-    "Adjective": ["Damp", "Aggressive", "Suspicious", "Lumpy", "Passive-Aggressive"],
-    "Verb": ["Audit", "Depreciate", "Ferment", "Yodel", "Recalculate"],
-    "Place": ["Arby's Bathroom", "The Void", "Burbank", "The Breakroom"],
-    "Corporate Jargon": ["Forced Synergy", "Core Competency", "Actionable Item", "Paradigm Shift", "Bandwidth"],
-    "Absurd Office Supply": ["Ergonomic Kneeling Chair", "Decaf Coffee Pod", "Yellow Dry-Erase Marker", "Single-Ply Toilet Paper"],
-    "Vague Metric": ["KPIs", "Eyeballs", "Touchbases", "Friction Points", "Actionables"],
-    "Passive-Aggressive Sign-off": ["Govern yourself accordingly,", "Per my last email,", "Regretfully,", "Sent from my smart fridge,", "Warmly,"]
+    "Aggressively passive-aggressive adjective": ["Perfunctory", "Adequate", "Underwhelming", "Moist", "Noted"],
+    "Forgotten 90s pop culture toy": ["Tamagotchi", "Bop It", "Furby", "Skip-It", "Pogs"],
+    "Breakroom-bannable verb (-ing)": ["Breakdancing", "Jousting", "Fermenting", "Vaporizing", "Summoning"],
+    "Unsettling office snack (plural)": ["Lukewarm Fish Tacos", "Unlabeled Tupperware Meats", "Crusty Mayo Packets", "Fossilized Donuts", "Moistened Croutons"],
+    "Sign-off phrase": ["Govern yourself accordingly,", "Stay radical,", "Sent from my smart fridge,", "Get recked,", "Ta ta for now,"]
 }
 
-def generate_draft_image(text, to_val, subj_val):
-    import urllib.request
-    import os
-    import textwrap
-    import io
-    import datetime
-    from PIL import Image, ImageDraw, ImageFont
-    
-    # 1. Fonts
-    font_path = "Roboto-Regular.ttf"
-    bold_font_path = "Roboto-Bold.ttf"
-    if not os.path.exists(font_path):
-        urllib.request.urlretrieve("https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Regular.ttf", font_path)
-    if not os.path.exists(bold_font_path):
-        urllib.request.urlretrieve("https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Medium.ttf", bold_font_path)
-
-    try:
-        font_main = ImageFont.truetype(font_path, 22)
-        font_header = ImageFont.truetype(bold_font_path, 20)
-        font_title = ImageFont.truetype(bold_font_path, 28)
-        font_watermark = ImageFont.truetype(bold_font_path, 16)
-    except:
-        font_main = font_header = font_title = font_watermark = ImageFont.load_default()
-
-    # 2. CALCULATE DYNAMIC HEIGHT
-    width = 850 # Matches your app width perfectly
-    margin = 80
-    wrap_width = 62 # Strict horizontal cutoff to keep text inside the box
-    
-    # Measure how tall the image needs to be before we draw it
-    temp_y = 80 + 50 + (35 * 3) + 20 + 40 # Margins + Headers + Line
-    
-    clean_text = text.replace('**', '').replace('<br>', '')
-    lines_to_draw = []
-    
-    for line in clean_text.split('\n'):
-        if line.strip() == "":
-            temp_y += 15
-            lines_to_draw.append(("", 15))
-            continue
-        for w_line in textwrap.wrap(line, width=wrap_width):
-            lines_to_draw.append((w_line, 32))
-            temp_y += 32
-        temp_y += 15
-        lines_to_draw.append(("", 15))
-        
-    # The final dynamic height of the image
-    height = temp_y + 90 
-    
-    # 3. DRAW THE IMAGE
-    paper = Image.new('RGB', (width, height), (248, 250, 252))
-    draw = ImageDraw.Draw(paper)
-    
-    # Draw the white "Email Card" dynamically sized to fit the text exactly
-    draw.rectangle([(40, 40), (width - 40, height - 50)], fill=(255, 255, 255), outline=(226, 232, 240), width=2)
-    
-    # Draw Headers
-    y = 80
-    draw.text((margin, y), "MEMO DRAFT", font=font_title, fill=(15, 23, 42))
-    y += 50
-    
-    headers = [
-        ("To:", to_val),
-        ("Date:", str(datetime.date.today())),
-        ("Subject:", subj_val)
-    ]
-    for label, val in headers:
-        draw.text((margin, y), f"{label:<10}", font=font_header, fill=(100, 116, 139))
-        draw.text((margin + 100, y), val, font=font_main, fill=(15, 23, 42))
-        y += 35
-        
-    y += 20
-    draw.line([(margin, y), (width - margin, y)], fill=(226, 232, 240), width=2)
-    y += 40
-    
-    # Draw pre-calculated wrapped text
-    for w_line, spacing in lines_to_draw:
-        if w_line:
-            draw.text((margin, y), w_line, font=font_main, fill=(30, 41, 59))
-        y += spacing
-        
-    # Brand Watermark at the very bottom
-    watermark_text = "Generated by Sheet Appeal"
-    text_width = draw.textlength(watermark_text, font=font_watermark)
-    draw.text(((width - text_width) / 2, height - 35), watermark_text, font=font_watermark, fill=(14, 165, 233))
-    
-    img_byte_arr = io.BytesIO()
-    paper.save(img_byte_arr, format='PNG')
-    return img_byte_arr.getvalue()
-
 # --- 4. TOP UI (HEADER) ---
-st.markdown("<h1 style='text-align: center; color: #0f172a; margin-bottom: 5px; font-weight: 800;'>Mad Lib Memo Generator</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 40px; font-size: 1.1rem;'>Turn absolute nonsense into corporate reality.</p>", unsafe_allow_html=True)
+st.markdown("""
+    <div class="header-section">
+        <div class="sa-logo">SA</div>
+        <h1>LINGUISTIC PROCESSOR</h1>
+        <div class="mission-statement">A structured narrative diversion for the creatively starved.</div>
+    </div>
+""", unsafe_allow_html=True)
 
 # Metadata Section
-st.markdown("<div class='section-label'>MEMO DETAILS</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-label'>Memo Details</div>", unsafe_allow_html=True)
 header_col1, header_col2 = st.columns(2, gap="medium")
 with header_col1:
     to_val = st.text_input("To", key="to_field", placeholder="e.g. Gary from HR")
@@ -261,8 +247,10 @@ st.markdown("<div class='section-label'>MAD LIB VARIABLES</div>", unsafe_allow_h
 col1, col2 = st.columns(2, gap="medium")
 word_keys = list(FUNNY_WORDS.keys())
 
+# Dynamically split the items evenly between columns
+half_point = (len(word_keys) + 1) // 2 
 for i, label in enumerate(word_keys):
-    with col1 if i < 4 else col2:
+    with col1 if i < half_point else col2:
         st.text_input(label, key=f"field_{label}", placeholder=f"Enter a {label.lower()}...")
 
 def randomize_data():
@@ -277,103 +265,92 @@ def reset_data():
     for key in FUNNY_WORDS.keys():
         st.session_state[f"field_{key}"] = ""
     st.session_state.email_data = None
-    st.session_state.draft_img = None
 
 st.write("")
 st.write("")
 
-# Button row - Now perfectly aligned natively
+# Button row 
 btn_col1, btn_col2, btn_col3 = st.columns(3, gap="medium")
 with btn_col1:
     st.button("Auto-Fill", on_click=randomize_data, use_container_width=True)
 with btn_col2:
     st.button("Clear", on_click=reset_data, use_container_width=True)
 with btn_col3:
-    execute = st.button("Generate Memo ✨", type="primary", use_container_width=True)
+    execute = st.button("Generate Memo", type="primary", use_container_width=True)
 
 # --- 6. EXECUTION & OUTPUT ---
 if execute:
-    collected_main = []
-    sign_off_val = ""
+    # 1. Validation: Check for any empty fields
+    missing_fields = []
+    if not to_val: missing_fields.append("To")
+    if not subj_val: missing_fields.append("Subject")
     
-    for label in word_keys:
+    user_variables = ""
+    for i, label in enumerate(word_keys):
         val = st.session_state.get(f"field_{label}", "").strip()
-        if label == "Passive-Aggressive Sign-off":
-            sign_off_val = val
-        else:
-            collected_main.append(val.lower())
-    
-    if not to_val or not subj_val or not sign_off_val or any(not val for val in collected_main):
-        st.error("Missing Data: Please fill out all fields before generating the memo.")
+        if not val:
+            missing_fields.append(label)
+        user_variables += f"- {label}: {val}\n"
+
+    if missing_fields:
+        st.error("Missing Data: Please hit 'Auto-Fill' or manually complete all fields before generating.")
     else:
         with st.spinner("Drafting memo..."):
             
-            # 1. BLINDFOLD THE AI: Tell it to write a template with blank spaces
+            # 2. The V3 Prompt (Adapted for API injection)
             prompt = f"""
-            You are creating a template for a classic Mad Libs game. 
-            
-            Write a completely standard, serious, boring 4-5 sentence, 2 paragraph, corporate email about.  '{subj_val}'.
-            
-            CRITICAL RULE: 
-            Instead of writing a normal email, you MUST leave bracketed placeholders in the text where words will be injected later. 
-            You must include EVERY SINGLE ONE of these exact placeholders organically in the text:
-            [Noun]
-            [Adjective]
-            [Verb]
-            [Place]
-            [Corporate Jargon]
-            [Absurd Office Supply]
-            [Vague Metric]
-            
-            Do not fill in the blanks. Just use the exact brackets above. The sentences around the brackets must be completely normal and boring. Do not add a greeting or a sign-off.
+            Role and Persona:
+            Act as the "Mad Lib Memo Tester." You are a 1990s-era analog activity book system navigating a 21st-century office environment. 
+            Your function is to transform user-provided variables into a concise, absurdly funny corporate memo.
+
+            Workflow:
+            Use the provided 'Subject' and 'To' fields, along with the list of user variables, to write ONE single corporate email. 
+            Do not include a behind-the-scenes blueprint, just the final deliverable. Do not add any conversational filler.
+
+            Content & Style Rules:
+            * The Clash: The humor comes from the grammatical perfection of the sentences contrasting with the absolute absurdity of the injected words. Use heavy, outdated white-collar jargon (bandwidth, circle back, synergies, pivot, action items). 
+            * Formatting: You MUST bold the injected user variables exactly like this: **Variable**. Do not bold any other words.
+            * Length Constraint: The email body must be strictly brief: exactly one paragraph, maximum 3 to 4 sentences total. Include corporate pleasantries.
+            * Sign-off: Conclude the email by placing the user's exact sign-off phrase on its own line at the very end, bolded. Do NOT include any AI signatures.
+
+            Input Data:
+            To: {to_val}
+            Subject: {subj_val}
+            Variables:
+            {user_variables}
             """
+            
             try:
-                # Turn the temperature DOWN so the AI writes a highly predictable, boring template
+                # Temperature raised slightly to 0.7 so the AI gets more creative with the jargon
                 response = client.models.generate_content(
                     model='gemma-3-27b-it', 
                     contents=prompt,
-                    config=types.GenerateContentConfig(temperature=0.3)
+                    config=types.GenerateContentConfig(temperature=0.7)
                 )
                 
-                draft_text = response.text
+                st.session_state.email_data = response.text
                 
-                # 2. PYTHON INJECTS THE WORDS (The true Mad Libs way)
-                for label in word_keys:
-                    if label != "Passive-Aggressive Sign-off":
-                        user_word = st.session_state.get(f"field_{label}", "").strip().lower()
-                        # This finds the AI's [Placeholder] and shoves your bold word into it
-                        draft_text = re.sub(rf'\[{label}\]', f"**{user_word}**", draft_text, flags=re.IGNORECASE)
-                
-                # 3. Add the To and Sign-off manually
-                final_email = f"**{to_val}**,\n\n{draft_text}\n\n**{sign_off_val}**"
-                
-                st.session_state.email_data = final_email
             except Exception as e:
                 st.error(f"Network Error: {e}")
 
+# --- 6.5. OUTPUT DISPLAY ---
 if st.session_state.email_data:
-    # Remove the blue color styling from the bolded words
+    # Convert markdown bold to HTML strong tags
     body_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', st.session_state.email_data)
     
     report_html = f"""
     <div class="output-card">
         <div class="output-header"><strong>To:</strong> {to_val}</div>
         <div class="output-header"><strong>Subject:</strong> {subj_val}</div>
-        <hr style="border:none; border-top:1px solid #e2e8f0; margin: 20px 0;">
+        <hr style="border:none; border-top:2px solid var(--faded-ledger); margin: 20px 0;">
         <div style="margin: 0;">{body_html}</div>
     </div>
     """
     st.markdown(report_html, unsafe_allow_html=True)
 
-    st.write("---")
-    l_col1, l_col2 = st.columns([1, 2])
-    with l_col1:
-        if st.button("Save as Image 💾"):
-            st.session_state.draft_img = generate_draft_image(st.session_state.email_data, to_val, subj_val)
-
-    if st.session_state.draft_img:
-        st.image(st.session_state.draft_img, caption="memo_export.png", use_container_width=True)
-        st.download_button("Download Image Export", data=st.session_state.draft_img, file_name="memo_export.png", mime="image/png")
-
 # --- 7. FOOTER ---
-st.markdown("<div style='text-align: center; margin-top: 60px; color: #94a3b8; font-size: 0.9rem; font-weight: 500;'>Brought to you by <span style='color: #0ea5e9; font-weight: 700;'>Sheet Appeal</span></div>", unsafe_allow_html=True)
+st.markdown("""
+    <div style='text-align: center; margin-top: 60px; color: #2E8555; font-size: 0.9rem; font-family: "Courier Prime", monospace;'>
+        Brought to you by <a href="https://sheetappeal.net" target="_blank" style="color: #E29587; font-weight: bold; text-decoration: none;">Sheet Appeal</a>
+    </div>
+""", unsafe_allow_html=True)
