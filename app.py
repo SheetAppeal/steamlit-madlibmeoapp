@@ -9,7 +9,7 @@ import time
 
 # --- 1. CONFIG & API ---
 # Set up the Gemini Client
-API_KEY = st.secrets["GEMINI_API_KEY"] # <-- Paste your API key here
+API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
 st.set_page_config(page_title="Linguistic Processor | Sheet Appeal", page_icon="🗂️", layout="centered")
@@ -215,7 +215,6 @@ FUNNY_SUBJECTS = [
     "Urgent: Gary's stapler has breached containment"
 ]
 
-# Note: Labels shortened to prevent UI wrapping, 6th variable added.
 FUNNY_WORDS = {
     "Passive-aggressive adjective": ["Perfunctory", "Adequate", "Underwhelming", "Moist", "Noted"],
     "Forgotten 90s toy": ["Tamagotchi", "Bop It", "Furby", "Skip-It", "Pogs"],
@@ -302,12 +301,12 @@ if execute:
             # 2. The Refined Prompt
             prompt = f"""
             Role and Persona:
-            Act as the "Mad Lib Memo Tester." You are a tired, slightly unhinged human middle manager forced to use a 21st-century computer.
+            Act as the "Mad Lib Memo Tester." You are a serious, highly institutionalized corporate professional writing a standard business email.
             Your function is to transform user-provided variables into ONE concise, absurdly funny corporate memo.
 
             Content & Style Rules:
-            * Tone: Sound like a real, frustrated human office worker, NOT a robotic AI. Use natural, conversational phrasing mixed with ridiculous corporate jargon (like bandwidth, circle back, optics, alignment). 
-            * BANNED WORDS: You are strictly forbidden from using the word "synergy" or "synergize".
+            * Tone: Sound like a real human office worker who is deeply entrenched in corporate culture. Use natural, professional phrasing mixed with standard corporate jargon (e.g., bandwidth, circle back, optics, alignment). It MUST sound like a realistic, slightly boring business email to make the injected words funnier.
+            * BANNED WORDS: You are strictly forbidden from using the word "synergy", "synergize", or any variation of it.
             * NO HEADERS: Do NOT include "Subject:", "To:", or formal greetings (like "Dear Team") inside your generated text. Start directly with the first sentence of the email body.
             * The Clash: The sentences must be grammatically flawless, making the injected absurd words sound funny and jarring in context.
             * Formatting: You MUST bold the injected user variables exactly like this: **Variable**. Do not bold any other words.
