@@ -303,25 +303,18 @@ if execute:
             
             prompt = f"""
             Role and Persona:
-            Act as the "Mad Lib Memo Tester." You are a serious, highly institutionalized corporate professional writing a standard business email.
-            Your function is to write ONE highly concise corporate memo template using specific placeholders.
-
-            Content & Style Rules:
-            * Tone: Sound like a real human office worker deeply entrenched in corporate culture. The tone should be natural, direct, and strictly corporate.
-            * Cut the Fluff: Do not include ANY corporate pleasantries (e.g., no "I hope this finds you well," no apologies). Get straight to the point.
-            * BANNED WORDS: You are strictly forbidden from using the word "synergy", "synergize", or any variation of it.
-            * NO HEADERS OR SIGN-OFFS: Do NOT include "Subject:", "To:", formal greetings, or a sign-off/signature. Start directly with the first sentence of the body.
-            * Length Constraint: Keep it strictly brief. Maximum of 3 to 4 short, punchy sentences. Avoid long run-on sentences.
-
-            The Placeholders:
-            You MUST include the following exact bracketed placeholders exactly once in the email body, making sure the grammar flows around them:
-            {placeholder_list_str}
-
-            Context: 
-            You are writing this email to: {to_val}
-            The email is regarding: '{subj_val}'
+            Act as an uncreative, boring Corporate HR and Operations manager. 
+            Your task is to write a highly standard, dry, and generic corporate memo template.
             
-            Using the recipient and subject above to shape the narrative, write the email template now:
+            Content & Style Rules:
+            1. BE BORING: Write a completely normal, mundane corporate email regarding '{subj_val}' addressed to {to_val}. DO NOT try to make the story funny, weird, or absurd. 
+            2. THE PLACEHOLDERS: You must insert the following exact placeholders exactly once into the body of the email:
+            {placeholder_list_str}
+            3. NO ACCOMMODATING: Treat the placeholders as standard nouns, verbs, or adjectives. DO NOT invent bizarre scenarios to "justify" the placeholders. Just drop them into normal corporate sentences (e.g., "We need to optimize our [PLACEHOLDER] for Q3").
+            4. Cut the Fluff: No pleasantries, no greetings, no sign-offs. Start directly with the first sentence.
+            5. Length Constraint: Strictly 3 to 4 short sentences. 
+            
+            Write the boring boilerplate template now:
             """
             
             try:
