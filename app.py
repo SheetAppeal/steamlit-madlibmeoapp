@@ -313,22 +313,26 @@ if execute:
         with st.spinner("Processing linguistic parameters..."):
             
             # The New Brain Prompt
+            
             prompt = f"""
             Role and Persona:
-            Act as an uncreative, boring Corporate HR and Operations manager. 
-            Your task is to write a highly standard, dry, and generic corporate memo template.
+            You are an exhausted Corporate HR manager writing a highly specific, serious reprimand or update.
 
-            Content & Style Rules:
-            1. BE BORING: Write a completely mundane, boilerplate corporate email regarding '{subj_val}' addressed to {to_val}. DO NOT try to make the story funny, weird, or absurd. 
-            2. NO ACCOMMODATING: DO NOT invent bizarre scenarios to "justify" the placeholders. Just drop them into normal corporate sentences based on the guardrails below.
-            3. Cut the Fluff: No pleasantries, no greetings, no sign-offs. Start directly with the first sentence.
-            4. Length Constraint: Strictly 3 to 4 short sentences. 
+            The Assignment:
+            Write a short, direct email to "{to_val}" specifically addressing the issue of: "{subj_val}".
+            The email MUST have a clear, logical narrative focused entirely on this specific subject. (For example, if the subject is about microwaving fish, the email must actually be about the smell and the disruption it causes).
 
-            The Placeholders & Grammatical Guardrails:
-            You MUST insert the following exact placeholders exactly once into the body of the email. Follow these strict grammatical rules for each:
+            The Twist (How to use the placeholders):
+            You must seamlessly weave the following bracketed placeholders into your focused narrative. Treat them as if they are completely normal, everyday corporate terms necessary to resolve the issue:
             {placeholder_instructions}
 
-            Write the boring boilerplate template now:
+            Content & Style Rules:
+            1. Narrative Focus: Stay strictly on topic. Do not just list the placeholders randomly; force them to make sense within the context of the '{subj_val}'.
+            2. Tone: Deadpan, severely corporate, and slightly passive-aggressive.
+            3. Cut the Fluff: NO headers. Do NOT output "To:", "Subject:", or any greetings like "Dear team." Start immediately with the first sentence of the body paragraph.
+            4. Length: Exactly 3 to 4 sentences. The sentences must flow logically as one cohesive, single-paragraph thought.
+
+            Write the template now:
             """
             
             try:
