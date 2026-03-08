@@ -212,10 +212,8 @@ FUNNY_WORDS = {
 
 
 # --- 4. CONDITIONAL TOP UI (HEADER) ---
-# Using our own custom parameter because Streamlit sometimes hides 'embed'
 is_embedded = st.query_params.get("hide_logo") == "true"
 
-# Only render the logo and title if the app is NOT embedded
 if not is_embedded:
     st.markdown("""
         <div class="header-section">
@@ -272,44 +270,55 @@ with btn_col3:
     execute = st.button("Generate Memo", type="primary", use_container_width=True)
 
 
-# --- 6. EXECUTION & OUTPUT ---
+# --- 6. EXECUTION & OUTPUT (METHOD 2: PYTHON REPLACEMENT) ---
 if execute:
-    # Validation: Check for any empty fields
+    # Validation
     missing_fields = []
     if not to_val: missing_fields.append("To")
     if not subj_val: missing_fields.append("Subject")
     
-    user_variables = ""
-    for i, label in enumerate(word_keys):
+    # We will store the user's inputs in a dictionary mapped to clean [PLACEHOLDERS]
+    user_inputs = {}
+    sign_off_val = ""
+    
+    for label in word_keys:
         val = st.session_state.get(f"field_{label}", "").strip()
         if not val:
             missing_fields.append(label)
-        user_variables += f"- {label}: {val}\n"
+            
+        if label == "Sign-off phrase":
+            sign_off_val = val
+        else:
+            # Create a clean placeholder like [FORGOTTEN_90S_TOY]
+            clean_placeholder = f"[{re.sub(r'[^a-zA-Z0-9]', '_', label).upper()}]"
+            user_inputs[clean_placeholder] = val
 
     if missing_fields:
         st.error("Missing Data: Please hit 'Auto-Fill' or manually complete all fields before generating.")
     else:
         with st.spinner("Drafting memo..."):
             
-            # The Refined Prompt
+            # Combine the placeholders into a list for the AI instructions
+            placeholder_list_str = "\n".join(user_inputs.keys())
+            
             prompt = f"""
             Role and Persona:
             Act as the "Mad Lib Memo Tester." You are a serious, highly institutionalized corporate professional writing a standard business email.
-            Your function is to transform user-provided variables into ONE concise, absurdly funny corporate memo.
+            Your function is to write ONE highly concise corporate memo template using specific placeholders.
 
             Content & Style Rules:
-            * Tone: Sound like a real human office worker who is deeply entrenched in corporate culture. Use natural, professional phrasing mixed with standard corporate jargon (e.g., bandwidth, circle back, optics, alignment). It MUST sound like a realistic, slightly boring business email to make the injected words funnier.
+            * Tone: Sound like a real human office worker deeply entrenched in corporate culture. The tone should be natural, direct, and strictly corporate.
+            * Cut the Fluff: Do not include ANY corporate pleasantries (e.g., no "I hope this finds you well," no apologies). Get straight to the point.
             * BANNED WORDS: You are strictly forbidden from using the word "synergy", "synergize", or any variation of it.
-            * NO HEADERS: Do NOT include "Subject:", "To:", or formal greetings (like "Dear Team") inside your generated text. Start directly with the first sentence of the email body.
-            * The Clash: The sentences must be grammatically flawless, making the injected absurd words sound funny and jarring in context.
-            * Formatting: You MUST bold the injected user variables exactly like this: **Variable**. Do not bold any other words.
-            * Length Constraint: Keep it strictly brief: exactly one paragraph, maximum 3 to 4 sentences total. Include realistic corporate pleasantries.
-            * Sign-off: Conclude the email by placing the user's exact sign-off phrase on its own line at the very end, bolded. Do NOT include any AI signatures.
+            * NO HEADERS OR SIGN-OFFS: Do NOT include "Subject:", "To:", formal greetings, or a sign-off/signature. Start directly with the first sentence of the body.
+            * Length Constraint: Keep it strictly brief. Maximum of 3 to 4 short, punchy sentences. Avoid long run-on sentences.
 
-            Input Data:
-            Context: The email is addressed to {to_val} regarding '{subj_val}'.
-            Variables to weave in:
-            {user_variables}
+            The Placeholders:
+            You MUST include the following exact bracketed placeholders exactly once in the email body, making sure the grammar flows around them:
+            {placeholder_list_str}
+
+            Context: 
+            The email is regarding '{subj_val}'. Write the email template now:
             """
             
             try:
@@ -319,10 +328,22 @@ if execute:
                     config=types.GenerateContentConfig(temperature=0.7)
                 )
                 
-                st.session_state.email_data = response.text
+                # Step 1: Get the blank template from the AI
+                template = response.text
+                
+                # Step 2: Python aggressively replaces the brackets with the user's words and bolds them
+                for placeholder, user_word in user_inputs.items():
+                    # We use replace to swap the exact bracket string with the bolded user input
+                    template = template.replace(placeholder, f"**{user_word}**")
+                
+                # Step 3: Tack the sign-off onto the end
+                template += f"\n\n**{sign_off_val}**"
+                
+                st.session_state.email_data = template
                 
             except Exception as e:
                 st.error(f"Network Error: {e}")
+
 
 # --- 7. OUTPUT DISPLAY ---
 if st.session_state.email_data:
