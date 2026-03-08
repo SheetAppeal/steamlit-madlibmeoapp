@@ -1,11 +1,36 @@
 import streamlit as st
 from google import genai
 from google.genai import types
-import json
 import random
-import datetime
 import re
-import time
+
+# Check the URL for the 'embed=true' parameter
+is_embedded = st.query_params.get("embed") == "true"
+
+# Only render the logo and title if the app is NOT embedded
+if not is_embedded:
+    st.markdown("""
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="sa-logo">SA</div>
+            <h1 style="font-family: 'Jost', sans-serif; letter-spacing: 0.4em; color: #2E8555;">LINGUISTIC PROCESSOR</h1>
+            <p style="font-family: 'Courier Prime', monospace; color: #2E8555;">A structured narrative diversion for the creatively starved.</p>
+        </div>
+    """, unsafe_allow_html=True)
+else:
+    # If it IS embedded, hide the scrollbars to prevent the "box inside a box" effect
+    st.markdown("""
+        <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .stApp::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .stApp {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
 # --- 1. CONFIG & API ---
 # Set up the Gemini Client
