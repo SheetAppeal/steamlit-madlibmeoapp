@@ -4,48 +4,26 @@ from google.genai import types
 import random
 import re
 
-# Check the URL for the 'embed=true' parameter
-is_embedded = st.query_params.get("embed") == "true"
+# --- 1. CONFIG & API (MUST BE FIRST) ---
+st.set_page_config(page_title="Linguistic Processor | Sheet Appeal", page_icon="🗂️", layout="centered")
 
-# Only render the logo and title if the app is NOT embedded
-if not is_embedded:
-    st.markdown("""
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <div class="sa-logo">SA</div>
-            <h1 style="font-family: 'Jost', sans-serif; letter-spacing: 0.4em; color: #2E8555;">LINGUISTIC PROCESSOR</h1>
-            <p style="font-family: 'Courier Prime', monospace; color: #2E8555;">A structured narrative diversion for the creatively starved.</p>
-        </div>
-    """, unsafe_allow_html=True)
-else:
-    # If it IS embedded, hide the scrollbars to prevent the "box inside a box" effect
-    st.markdown("""
-        <style>
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .stApp::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .stApp {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-# --- 1. CONFIG & API ---
-# Set up the Gemini Client
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
-
-st.set_page_config(page_title="Linguistic Processor | Sheet Appeal", page_icon="🗂️", layout="centered")
 
 if 'email_data' not in st.session_state:
     st.session_state.email_data = None
 
-# --- 2. SHEET APPEAL IDENTITY CSS ---
+# --- 2. GLOBAL CSS & BRANDING OVERRIDES ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&family=Jost:wght@400;500&display=swap');
+
+    /* Hide Streamlit Header, Footer, and Scrollbars */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stApp::-webkit-scrollbar { display: none; }
+    .stApp { -ms-overflow-style: none; scrollbar-width: none; }
 
     :root {
         --archival-paper: #FDFBF7;
@@ -78,7 +56,7 @@ st.markdown("""
     /* The Master Container */
     .main .block-container { 
         max-width: 850px; 
-        padding-top: 3rem; 
+        padding-top: 1rem; /* Reduced padding since we removed the top header */
         padding-bottom: 3rem;
     }
 
@@ -106,6 +84,10 @@ st.markdown("""
         box-shadow: 4px 4px 0px var(--courtesan-mustard);
     }
 
+    .header-section {
+        margin-bottom: 40px;
+    }
+    
     .header-section h1 {
         font-size: 1.4rem !important; 
         letter-spacing: 0.4em !important; 
@@ -117,10 +99,9 @@ st.markdown("""
         text-align: center;
         font-size: 1rem;
         letter-spacing: 0.05em;
-        margin-bottom: 40px;
     }
 
-    /* Custom Input Fields: Force rigid corners on all nested layers */
+    /* Custom Input Fields: Force rigid corners */
     div[data-testid="stTextInput"] * {
         border-radius: 0px !important;
     }
@@ -170,7 +151,6 @@ st.markdown("""
         transition: all 0.2s ease;
     }
     
-    /* Stop text wrapping and force font settings */
     .stButton > button p {
         font-family: 'Jost', sans-serif !important;
         text-transform: uppercase !important;
@@ -180,35 +160,16 @@ st.markdown("""
         white-space: nowrap !important;
     }
 
-    /* Secondary Buttons (Auto-Fill, Clear) */
-    [data-testid="baseButton-secondary"] {
-        background-color: var(--vintage-cell-green) !important;
-    }
-    [data-testid="baseButton-secondary"] p {
-        color: var(--archival-paper) !important;
-    }
-    [data-testid="baseButton-secondary"]:hover {
-        background-color: var(--archival-paper) !important;
-    }
-    [data-testid="baseButton-secondary"]:hover p {
-        color: var(--vintage-cell-green) !important;
-    }
+    [data-testid="baseButton-secondary"] { background-color: var(--vintage-cell-green) !important; }
+    [data-testid="baseButton-secondary"] p { color: var(--archival-paper) !important; }
+    [data-testid="baseButton-secondary"]:hover { background-color: var(--archival-paper) !important; }
+    [data-testid="baseButton-secondary"]:hover p { color: var(--vintage-cell-green) !important; }
 
-    /* Primary Button (Generate Memo) */
-    [data-testid="baseButton-primary"] {
-        background-color: var(--archival-paper) !important;
-    }
-    [data-testid="baseButton-primary"] p {
-        color: var(--vintage-cell-green) !important;
-    }
-    [data-testid="baseButton-primary"]:hover {
-        background-color: var(--vintage-cell-green) !important;
-    }
-    [data-testid="baseButton-primary"]:hover p {
-        color: var(--archival-paper) !important;
-    }
+    [data-testid="baseButton-primary"] { background-color: var(--archival-paper) !important; }
+    [data-testid="baseButton-primary"] p { color: var(--vintage-cell-green) !important; }
+    [data-testid="baseButton-primary"]:hover { background-color: var(--vintage-cell-green) !important; }
+    [data-testid="baseButton-primary"]:hover p { color: var(--archival-paper) !important; }
 
-    /* Output Box / The generated memo */
     .output-card {
         background-color: var(--archival-paper);
         padding: 40px;
@@ -226,7 +187,7 @@ st.markdown("""
         font-weight: 500;
     }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # --- 3. HELPER LOGIC & VOCABULARY ---
 PROPER_NOUNS = ["The IRS", "Clippy", "Enron", "Gary from HR", "Burbank", "The 1997 Florida Marlins", "The Janitorial Union"]
@@ -249,14 +210,23 @@ FUNNY_WORDS = {
     "Sign-off phrase": ["Govern yourself accordingly,", "Stay radical,", "Sent from my smart fridge,", "Get recked,", "Ta ta for now,"]
 }
 
-# --- 4. TOP UI (HEADER) ---
-st.markdown("""
-    <div class="header-section">
-        <div class="sa-logo">SA</div>
-        <h1>LINGUISTIC PROCESSOR</h1>
-        <div class="mission-statement">A structured narrative diversion for the creatively starved.</div>
-    </div>
-""", unsafe_allow_html=True)
+
+# --- 4. CONDITIONAL TOP UI (HEADER) ---
+# Check the URL for the 'embed=true' parameter
+is_embedded = st.query_params.get("embed") == "true"
+
+# Only render the logo and title if the app is NOT embedded
+if not is_embedded:
+    st.markdown("""
+        <div class="header-section">
+            <div class="sa-logo">SA</div>
+            <h1>LINGUISTIC PROCESSOR</h1>
+            <div class="mission-statement">A structured narrative diversion for the creatively starved.</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# --- 5. DATA ENTRY ---
+st.markdown("<div class='section-label'>Memo Details</div>", unsafe_allow_html=True)
 
 # Metadata Section
 st.markdown("<div class='section-label'>Memo Details</div>", unsafe_allow_html=True)
