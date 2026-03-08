@@ -212,8 +212,8 @@ FUNNY_WORDS = {
 
 
 # --- 4. CONDITIONAL TOP UI (HEADER) ---
-# Check the URL for the 'embed=true' parameter
-is_embedded = st.query_params.get("embed") == "true"
+# Using our own custom parameter because Streamlit sometimes hides 'embed'
+is_embedded = st.query_params.get("hide_logo") == "true"
 
 # Only render the logo and title if the app is NOT embedded
 if not is_embedded:
