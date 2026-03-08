@@ -214,7 +214,6 @@ FUNNY_WORDS = {
     "Sign-off phrase": ["Apologetically,", "May God have mercy on our KPIs,", "Sent from my aggressively loud mechanical keyboard,", "With a heavy heart,", "Survive the week,"]
 }
 
-
 # --- 4. CONDITIONAL TOP UI (HEADER) ---
 is_embedded = st.query_params.get("hide_logo") == "true"
 
@@ -227,14 +226,13 @@ if not is_embedded:
         </div>
     """, unsafe_allow_html=True)
 
-
 # --- 5. DATA ENTRY ---
 st.markdown("<div class='section-label'>Memo Details</div>", unsafe_allow_html=True)
 header_col1, header_col2 = st.columns(2, gap="medium")
 with header_col1:
-    to_val = st.text_input("To", key="to_field", placeholder="e.g. Gary from HR")
+    to_val = st.text_input("To", key="to_field", placeholder="e.g. The Shadow Council")
 with header_col2:
-    subj_val = st.text_input("Subject", key="subject_field", placeholder="e.g. Feral cats in the server room")
+    subj_val = st.text_input("Subject", key="subject_field", placeholder="e.g. Update: The water cooler is now sentient")
 
 st.write("") 
 
@@ -274,16 +272,25 @@ with btn_col3:
     execute = st.button("Generate Memo", type="primary", use_container_width=True)
 
 
-# --- 6. EXECUTION & OUTPUT (METHOD 2: PYTHON REPLACEMENT) ---
+# --- 6. EXECUTION & OUTPUT (METHOD 2 + NEW BRAIN) ---
 if execute:
     # Validation
     missing_fields = []
     if not to_val: missing_fields.append("To")
     if not subj_val: missing_fields.append("Subject")
     
-    # We will store the user's inputs in a dictionary mapped to clean [PLACEHOLDERS]
     user_inputs = {}
     sign_off_val = ""
+    placeholder_instructions = ""
+    
+    # We dynamically map your specific rules to the exact categories
+    guardrails = {
+        "Suspicious Liquid": "Treat as a singular, uncountable noun (e.g., 'spilled {placeholder} on the floor').",
+        "Obsolete Tech": "Treat as a singular, countable noun (e.g., 'the broken {placeholder}').",
+        "Breakroom Activity (-ing)": "Treat strictly as a gerund/action ending in -ing (e.g., 'caught them {placeholder} near the copier').",
+        "Unsettling Snack (plural)": "Treat strictly as a plural noun (e.g., 'eating all the {placeholder}').",
+        "Inappropriate Attire": "Treat as an article of clothing (e.g., 'wearing {placeholder} to the client meeting')."
+    }
     
     for label in word_keys:
         val = st.session_state.get(f"field_{label}", "").strip()
@@ -293,31 +300,34 @@ if execute:
         if label == "Sign-off phrase":
             sign_off_val = val
         else:
-            # Create a clean placeholder like [FORGOTTEN_90S_TOY]
             clean_placeholder = f"[{re.sub(r'[^a-zA-Z0-9]', '_', label).upper()}]"
             user_inputs[clean_placeholder] = val
+            
+            # Match the rule to the placeholder for the AI
+            rule = guardrails.get(label, "Treat as a standard noun.").replace("{placeholder}", clean_placeholder)
+            placeholder_instructions += f"- {clean_placeholder}: {rule}\n"
 
     if missing_fields:
         st.error("Missing Data: Please hit 'Auto-Fill' or manually complete all fields before generating.")
     else:
-        with st.spinner("Drafting memo..."):
+        with st.spinner("Processing linguistic parameters..."):
             
-            # Combine the placeholders into a list for the AI instructions
-            placeholder_list_str = "\n".join(user_inputs.keys())
-            
+            # The New Brain Prompt
             prompt = f"""
             Role and Persona:
             Act as an uncreative, boring Corporate HR and Operations manager. 
             Your task is to write a highly standard, dry, and generic corporate memo template.
-            
+
             Content & Style Rules:
-            1. BE BORING: Write a completely normal, mundane corporate email regarding '{subj_val}' addressed to {to_val}. DO NOT try to make the story funny, weird, or absurd. 
-            2. THE PLACEHOLDERS: You must insert the following exact placeholders exactly once into the body of the email:
-            {placeholder_list_str}
-            3. NO ACCOMMODATING: Treat the placeholders as standard nouns, verbs, or adjectives. DO NOT invent bizarre scenarios to "justify" the placeholders. Just drop them into normal corporate sentences (e.g., "We need to optimize our [PLACEHOLDER] for Q3").
-            4. Cut the Fluff: No pleasantries, no greetings, no sign-offs. Start directly with the first sentence.
-            5. Length Constraint: Strictly 3 to 4 short sentences. 
-            
+            1. BE BORING: Write a completely mundane, boilerplate corporate email regarding '{subj_val}' addressed to {to_val}. DO NOT try to make the story funny, weird, or absurd. 
+            2. NO ACCOMMODATING: DO NOT invent bizarre scenarios to "justify" the placeholders. Just drop them into normal corporate sentences based on the guardrails below.
+            3. Cut the Fluff: No pleasantries, no greetings, no sign-offs. Start directly with the first sentence.
+            4. Length Constraint: Strictly 3 to 4 short sentences. 
+
+            The Placeholders & Grammatical Guardrails:
+            You MUST insert the following exact placeholders exactly once into the body of the email. Follow these strict grammatical rules for each:
+            {placeholder_instructions}
+
             Write the boring boilerplate template now:
             """
             
@@ -328,15 +338,13 @@ if execute:
                     config=types.GenerateContentConfig(temperature=0.7)
                 )
                 
-                # Step 1: Get the blank template from the AI
                 template = response.text
                 
-                # Step 2: Python aggressively replaces the brackets with the user's words and bolds them
+                # Python aggressively replaces the brackets with the user's words and bolds them
                 for placeholder, user_word in user_inputs.items():
-                    # We use replace to swap the exact bracket string with the bolded user input
                     template = template.replace(placeholder, f"**{user_word}**")
                 
-                # Step 3: Tack the sign-off onto the end
+                # Tack the sign-off onto the end
                 template += f"\n\n**{sign_off_val}**"
                 
                 st.session_state.email_data = template
@@ -344,11 +352,10 @@ if execute:
             except Exception as e:
                 st.error(f"Network Error: {e}")
 
-
 # --- 7. OUTPUT DISPLAY ---
 if st.session_state.email_data:
-    # Convert markdown bold to HTML strong tags
-    body_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', st.session_state.email_data)
+    # Convert markdown bold to HTML strong tags with the mustard color for popping effect
+    body_html = re.sub(r'\*\*(.*?)\*\*', r'<strong style="color: var(--courtesan-mustard);">\1</strong>', st.session_state.email_data)
     
     report_html = f"""
     <div class="output-card">
