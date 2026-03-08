@@ -318,7 +318,10 @@ if execute:
             {placeholder_list_str}
 
             Context: 
-            The email is regarding '{subj_val}'. Write the email template now:
+            You are writing this email to: {to_val}
+            The email is regarding: '{subj_val}'
+            
+            Using the recipient and subject above to shape the narrative, write the email template now:
             """
             
             try:
