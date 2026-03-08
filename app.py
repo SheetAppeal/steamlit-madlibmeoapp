@@ -190,24 +190,28 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 3. HELPER LOGIC & VOCABULARY ---
-PROPER_NOUNS = ["The IRS", "Clippy", "Enron", "Gary from HR", "Burbank", "The 1997 Florida Marlins", "The Janitorial Union"]
+PROPER_NOUNS = [
+    "The Ghost of Lehman Brothers", "The HOA", "Y2K Survivalists", 
+    "Burbank Parking Authority", "That guy who microwaves fish", 
+    "The Shadow Council", "Middle Management"
+]
+
 FUNNY_SUBJECTS = [
-    "Regarding bees in the bathrooms",
-    "Kool-Aid in the water fountain",
-    "Mandatory updates to internal communication protocol",
-    "Action Required: Feral cats in the server room",
-    "Update on the breakroom microwave incident",
-    "Expense report rejection: 'Wizard Robes'",
-    "Urgent: Gary's stapler has breached containment"
+    "Please stop reply-alling to the fire alarm",
+    "Update: The water cooler is now sentient",
+    "Regarding the chanting in conference room B",
+    "Action Required: Stop using company funds for V-Bucks",
+    "Dress code reminder: Chainmail is not business casual",
+    "Who keeps printing out the entire internet?"
 ]
 
 FUNNY_WORDS = {
-    "Passive-aggressive adjective": ["Perfunctory", "Adequate", "Underwhelming", "Moist", "Noted"],
-    "Forgotten 90s toy": ["Tamagotchi", "Bop It", "Furby", "Skip-It", "Pogs"],
-    "Bannable breakroom verb (-ing)": ["Breakdancing", "Jousting", "Fermenting", "Vaporizing", "Summoning"],
-    "Unsettling office snack (plural)": ["Lukewarm Fish Tacos", "Unlabeled Tupperware Meats", "Crusty Mayo Packets", "Fossilized Donuts", "Moistened Croutons"],
-    "Questionable fashion choice": ["Toe Shoes", "Wizard Robe", "Heelys", "Chain Wallet", "Assless Chaps"],
-    "Sign-off phrase": ["Govern yourself accordingly,", "Stay radical,", "Sent from my smart fridge,", "Get recked,", "Ta ta for now,"]
+    "Suspicious Liquid": ["Brake fluid", "Hot dog water", "Room-temperature milk", "Ectoplasm", "Liquid smoke"],
+    "Obsolete Tech": ["Zune", "Fax machine", "Pager", "Overhead projector", "Floppy disk"],
+    "Breakroom Activity (-ing)": ["Astral projecting", "Unionizing", "Deep-frying", "Yodeling", "Performative weeping"],
+    "Unsettling Snack (plural)": ["Pickled eggs", "Loose pocket-tater-tots", "Unlabeled meat tubes", "Floor-pretzels", "Dehydrated water"],
+    "Inappropriate Attire": ["JNCO jeans", "Velcro sandals", "A monocle", "Pleather pants", "A prop comedy tie"],
+    "Sign-off phrase": ["Apologetically,", "May God have mercy on our KPIs,", "Sent from my aggressively loud mechanical keyboard,", "With a heavy heart,", "Survive the week,"]
 }
 
 
