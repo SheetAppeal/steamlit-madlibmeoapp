@@ -56,7 +56,7 @@ st.markdown("""
     /* The Master Container */
     .main .block-container { 
         max-width: 850px; 
-        padding-top: 1rem; /* Reduced padding since we removed the top header */
+        padding-top: 1rem; 
         padding-bottom: 3rem;
     }
 
@@ -225,10 +225,8 @@ if not is_embedded:
         </div>
     """, unsafe_allow_html=True)
 
-# --- 5. DATA ENTRY ---
-st.markdown("<div class='section-label'>Memo Details</div>", unsafe_allow_html=True)
 
-# Metadata Section
+# --- 5. DATA ENTRY ---
 st.markdown("<div class='section-label'>Memo Details</div>", unsafe_allow_html=True)
 header_col1, header_col2 = st.columns(2, gap="medium")
 with header_col1:
@@ -238,7 +236,6 @@ with header_col2:
 
 st.write("") 
 
-# --- 5. DATA ENTRY ---
 st.markdown("<div class='section-label'>MAD LIB VARIABLES</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2, gap="medium")
 word_keys = list(FUNNY_WORDS.keys())
@@ -274,9 +271,10 @@ with btn_col2:
 with btn_col3:
     execute = st.button("Generate Memo", type="primary", use_container_width=True)
 
+
 # --- 6. EXECUTION & OUTPUT ---
 if execute:
-    # 1. Validation: Check for any empty fields
+    # Validation: Check for any empty fields
     missing_fields = []
     if not to_val: missing_fields.append("To")
     if not subj_val: missing_fields.append("Subject")
@@ -293,7 +291,7 @@ if execute:
     else:
         with st.spinner("Drafting memo..."):
             
-            # 2. The Refined Prompt
+            # The Refined Prompt
             prompt = f"""
             Role and Persona:
             Act as the "Mad Lib Memo Tester." You are a serious, highly institutionalized corporate professional writing a standard business email.
@@ -326,7 +324,7 @@ if execute:
             except Exception as e:
                 st.error(f"Network Error: {e}")
 
-# --- 6.5. OUTPUT DISPLAY ---
+# --- 7. OUTPUT DISPLAY ---
 if st.session_state.email_data:
     # Convert markdown bold to HTML strong tags
     body_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', st.session_state.email_data)
@@ -341,7 +339,7 @@ if st.session_state.email_data:
     """
     st.markdown(report_html, unsafe_allow_html=True)
 
-# --- 7. FOOTER ---
+# --- 8. FOOTER ---
 st.markdown("""
     <div style='text-align: center; margin-top: 60px; color: #2E8555; font-size: 0.9rem; font-family: "Courier Prime", monospace;'>
         Brought to you by <a href="https://sheetappeal.net" target="_blank" style="color: #E29587; font-weight: bold; text-decoration: none;">Sheet Appeal</a>
