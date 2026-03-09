@@ -316,22 +316,23 @@ if execute:
             
             prompt = f"""
             Role and Persona:
-            You are an exhausted Corporate HR manager writing a highly specific, serious reprimand or update.
+            You are a ruthless, time-starved Corporate manager writing a highly specific, blunt reprimand or update.
 
             The Assignment:
-            Write a short, direct email to "{to_val}" specifically addressing the issue of: "{subj_val}".
-            The email MUST have a clear, logical narrative focused entirely on this specific subject. (For example, if the subject is about microwaving fish, the email must actually be about the smell and the disruption it causes).
+            Write an incredibly brief email to "{to_val}" addressing: "{subj_val}".
+            The email MUST have a clear narrative focused entirely on this specific subject, but execute it with brutal corporate brevity.
 
             The Twist (How to use the placeholders):
-            You must seamlessly weave the following bracketed placeholders into your focused narrative. Treat them as if they are completely normal, everyday corporate terms necessary to resolve the issue:
+            Seamlessly weave these bracketed placeholders into the email. Treat them as completely normal corporate terms necessary to resolve the issue:
             {placeholder_instructions}
 
             Content & Style Rules:
-            1. Narrative Focus: Stay strictly on topic. Do not just list the placeholders randomly; force them to make sense within the context of the '{subj_val}'.
-            2. Tone: Deadpan, severely corporate, and slightly passive-aggressive.
-            3. Cut the Fluff: NO headers. Do NOT output "To:", "Subject:", or any greetings like "Dear team." Start immediately with the first sentence of the body paragraph.
-            4. Length: Exactly 3 to 4 sentences. The sentences must flow logically as one cohesive, single-paragraph thought.
-
+            1. EXTREME BREVITY: The entire email must be UNDER 60 WORDS TOTAL. 
+            2. SHORT SENTENCES: You are forbidden from using compound sentences, semicolons, or long comma lists. Every single sentence must be short, punchy, and under 15 words. 
+            3. BLUNTNESS: Do not over-explain how the variables connect to the subject. Just state the facts or issue direct orders. Assume the reader already knows the context.
+            4. Tone: Deadpan, severely corporate, and passive-aggressive. 
+            5. Cut the Fluff: NO headers. Do NOT output "To:", "Subject:", or any greetings. Start immediately with the first sentence of the body.
+            
             Write the template now:
             """
             
