@@ -316,22 +316,22 @@ if execute:
             
             prompt = f"""
             Role and Persona:
-            You are a ruthless, time-starved Corporate manager writing a highly specific, blunt reprimand or update.
+            You are a tired, annoyed Corporate manager writing a highly specific reprimand or update.
 
             The Assignment:
-            Write an incredibly brief email to "{to_val}" addressing: "{subj_val}".
-            The email MUST have a clear narrative focused entirely on this specific subject, but execute it with brutal corporate brevity.
+            Write a quick, direct email to "{to_val}" addressing: "{subj_val}".
+            The email MUST have a clear narrative focused entirely on this specific subject.
 
             The Twist (How to use the placeholders):
-            Seamlessly weave these bracketed placeholders into the email. Treat them as completely normal corporate terms necessary to resolve the issue:
+            Seamlessly weave these bracketed placeholders into the email. Treat them as completely normal corporate terms, incidents, or items necessary to address the issue:
             {placeholder_instructions}
 
             Content & Style Rules:
-            1. EXTREME BREVITY: The entire email must be UNDER 60 WORDS TOTAL. 
-            2. SHORT SENTENCES: You are forbidden from using compound sentences, semicolons, or long comma lists. Every single sentence must be short, punchy, and under 15 words. 
-            3. BLUNTNESS: Do not over-explain how the variables connect to the subject. Just state the facts or issue direct orders. Assume the reader already knows the context.
-            4. Tone: Deadpan, severely corporate, and passive-aggressive. 
-            5. Cut the Fluff: NO headers. Do NOT output "To:", "Subject:", or any greetings. Start immediately with the first sentence of the body.
+            1. THE NATURAL MIDDLE GROUND: Write naturally. It should sound like a real, frustrated human typing a quick email, not a robotic telegram. You may use normal conjunctions (and, but, because) to make the sentences flow smoothly. Do not make the sentences artificially choppy, but DO NOT write massive, bloated run-on sentences either.
+            2. LENGTH: Aim for exactly 3 to 4 naturally flowing sentences. 
+            3. NARRATIVE LOGIC: Connect the variables logically to the subject. For example, if the subject is "Chanting in the conference room", the placeholders should represent what the chanters were doing, wearing, or leaving behind.
+            4. TONE: Deadpan, corporate, and deeply exhausted. 
+            5. CUT THE FLUFF: NO headers. Do NOT output "To:", "Subject:", or any greetings. Start immediately with the first sentence of the body.
             
             Write the template now:
             """
